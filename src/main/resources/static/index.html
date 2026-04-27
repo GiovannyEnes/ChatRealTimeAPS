@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat em tempo real</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="chat-page">
+    <section class="chat-app">
+      <header class="chat-header">
+        <div class="brand-block">
+          <h1>Chat em tempo real</h1>
+        </div>
+
+        <div class="status-pill" id="connectionStatus" hidden>
+          <span class="status-dot"></span>
+          <span id="connectionLabel">Conectando...</span>
+        </div>
+      </header>
+
+      <section class="welcome-panel" id="welcomePanel">
+        <div class="welcome-copy">
+          <span class="panel-tag">Acesso rapido</span>
+          <h2>Entre no chat para comecar a conversa</h2>
+          <p>Escolha um nome para aparecer nas mensagens e conecte-se ao servidor WebSocket.</p>
+        </div>
+
+        <div class="username-box">
+          <label for="usernameInput">Seu nome</label>
+          <div class="username-form">
+            <input id="usernameInput" type="text" placeholder="Digite seu nome de usuario" maxlength="40" autocomplete="off">
+            <button id="enterButton" type="button">Entrar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="chat-room" id="chatRoom" hidden>
+        <div class="chat-meta">
+          <div>
+            <span class="panel-tag">Sessao ativa</span>
+            <p class="current-user">Voce esta conversando como <strong id="currentUsername"></strong></p>
+          </div>
+          <p class="message-count"><span id="messageCount">0</span> mensagem(ns)</p>
+        </div>
+
+        <div class="messages-area" id="messagesContainer">
+          <div class="empty-state" id="emptyState">
+            <span class="empty-badge">Pronto para conversar</span>
+            <h3>Nenhuma mensagem ainda</h3>
+            <p>As mensagens recebidas aparecerao aqui em tempo real.</p>
+          </div>
+        </div>
+
+        <footer class="chat-composer">
+          <input id="messageInput" type="text" placeholder="Digite sua mensagem" autocomplete="off">
+          <button id="sendButton" type="button">Enviar</button>
+        </footer>
+      </section>
+    </section>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>
