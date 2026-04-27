@@ -50,6 +50,34 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         });
     }
 
+    // Allow other components to broadcast ChatMessage instances
+    public void broadcast(ChatMessage chatMessage) {
+        try {
+            normalizeMessage(chatMessage);
+            if (chatMessage.getUsername() == null || chatMessage.getUsername().isBlank()
+                    || chatMessage.getMessage() == null || chatMessage.getMessage().isBlank()) {
+                return;
+            }
+
+            String outMessage = objectMapper.writeValueAsString(chatMessage);
+
+            sessions.forEach((sessionId, currentSession) -> {
+                if (!currentSession.isOpen()) {
+                    sessions.remove(sessionId);
+                    return;
+                }
+
+                try {
+                    currentSession.sendMessage(new TextMessage(outMessage));
+                } catch (Exception exception) {
+                    exception.printStackTrace();
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         System.out.println("Conexao fechada: " + session.getId());

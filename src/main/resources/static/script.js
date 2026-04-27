@@ -23,6 +23,8 @@ const elements = {
   emptyState: document.getElementById("emptyState"),
   messageInput: document.getElementById("messageInput"),
   sendButton: document.getElementById("sendButton"),
+  recordButton: document.getElementById("recordButton"),
+  audioFileInput: document.getElementById("audioFileInput"),
   messageCount: document.getElementById("messageCount")
 };
 
@@ -54,11 +56,23 @@ function renderMessages() {
     username.className = "message-username";
     username.textContent = message.username;
 
-    const text = document.createElement("p");
-    text.className = "message-text";
-    text.textContent = message.message;
+    article.append(username);
 
-    article.append(username, text);
+    if (message.type === "audio") {
+      const audioWrapper = document.createElement('div');
+      audioWrapper.className = 'message-audio';
+      const audio = document.createElement('audio');
+      audio.controls = true;
+      audio.src = message.message; // data URL
+      audioWrapper.appendChild(audio);
+      article.appendChild(audioWrapper);
+    } else {
+      const text = document.createElement("p");
+      text.className = "message-text";
+      text.textContent = message.message;
+      article.appendChild(text);
+    }
+
     elements.messagesContainer.appendChild(article);
   });
 
@@ -137,7 +151,8 @@ function connectWebSocket() {
 
       const normalizedMessage = {
         username: message.username.trim(),
-        message: message.message.trim()
+        message: message.message.trim(),
+        type: typeof message.type === 'string' ? message.type : 'text'
       };
 
       if (!normalizedMessage.username || !normalizedMessage.message) {
@@ -193,6 +208,79 @@ function sendMessage() {
   elements.messageInput.value = "";
   elements.messageInput.focus();
 }
+
+// Audio recording/upload support
+let mediaRecorder = null;
+let recordedChunks = [];
+
+async function startOrSendAudio() {
+  // If MediaRecorder is available, toggle recording
+  if (navigator.mediaDevices && window.MediaRecorder) {
+    if (!mediaRecorder) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        recordedChunks = [];
+
+        mediaRecorder.addEventListener('dataavailable', (e) => {
+          if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+        });
+
+        mediaRecorder.addEventListener('stop', async () => {
+          const blob = new Blob(recordedChunks, { type: recordedChunks[0].type || 'audio/webm' });
+          await uploadAudioBlob(blob);
+          mediaRecorder = null;
+          recordedChunks = [];
+        });
+
+        mediaRecorder.start();
+        elements.recordButton.textContent = 'Parar e Enviar';
+      } catch (err) {
+        console.error('Erro ao acessar microfone:', err);
+        // fallback to file input
+        elements.audioFileInput.click();
+      }
+    } else {
+      // stop and send
+      mediaRecorder.stop();
+      elements.recordButton.textContent = 'Gravar/Enviar Áudio';
+    }
+  } else {
+    // fallback: open file selector
+    elements.audioFileInput.click();
+  }
+}
+
+async function uploadAudioBlob(blob) {
+  if (!state.username) {
+    alert('Defina um nome de usuario antes de enviar audio');
+    return;
+  }
+
+  const form = new FormData();
+  form.append('username', state.username);
+  form.append('file', blob, 'audio.webm');
+
+  try {
+    await fetch('/upload-audio', {
+      method: 'POST',
+      body: form
+    });
+  } catch (err) {
+    console.error('Falha ao enviar audio:', err);
+  }
+}
+
+elements.recordButton.addEventListener('click', startOrSendAudio);
+elements.audioFileInput.addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (file) {
+    await uploadAudioBlob(file);
+  }
+  // reset input
+  e.target.value = '';
+});
+
 
 // eventos
 elements.enterButton.addEventListener("click", enterChat);

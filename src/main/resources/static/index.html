@@ -55,7 +55,11 @@
 
         <footer class="chat-composer">
           <input id="messageInput" type="text" placeholder="Digite sua mensagem" autocomplete="off">
-          <button id="sendButton" type="button">Enviar</button>
+          <div class="composer-actions">
+            <button id="sendButton" type="button">Enviar</button>
+            <button id="recordButton" type="button" title="Enviar audio">Gravar/Enviar Áudio</button>
+            <input id="audioFileInput" type="file" accept="audio/*" hidden>
+          </div>
         </footer>
       </section>
     </section>
